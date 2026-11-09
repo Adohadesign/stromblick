@@ -1,0 +1,52 @@
+name: Android-APK erstellen
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'android/**'
+      - 'scripts/prepare-android.mjs'
+      - 'index.html'
+      - 'app.mjs'
+      - 'calculations.mjs'
+      - 'storage.mjs'
+      - 'styles.css'
+      - 'icons/**'
+      - 'manifest.webmanifest'
+      - 'service-worker.js'
+      - 'settings.gradle.kts'
+      - 'build.gradle.kts'
+      - 'gradle.properties'
+      - '.github/workflows/build-apk.yml'
+permissions:
+  contents: read
+jobs:
+  android-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Quellcode herunterladen
+        uses: actions/checkout@v4
+      - name: Java 17 einrichten
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Gradle einrichten
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Android SDK einrichten
+        uses: android-actions/setup-android@v3
+      - name: Android SDK 35 bereitstellen
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Rechenlogik testen
+        run: node --test tests/calculations.test.mjs
+      - name: APK bauen
+        run: gradle --no-daemon :android:assembleDebug
+      - name: APK zum Download bereitstellen
+        uses: actions/upload-artifact@v4
+        with:
+          name: StromBlick-v1.1.0-TEST-APK
+          path: android/build/outputs/apk/debug/android-debug.apk
+          if-no-files-found: error
+          retention-days: 30
