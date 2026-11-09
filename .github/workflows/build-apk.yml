@@ -43,13 +43,13 @@ jobs:
           yes | "$SDKMANAGER" --licenses > /dev/null || true
           "$SDKMANAGER" 'platforms;android-35' 'build-tools;35.0.0'
       - name: Rechenlogik testen
-        run: node --test tests/calculations.test.mjs
+        run: node --test tests/*.test.mjs
       - name: APK bauen
         run: gradle --no-daemon :android:assembleDebug
       - name: APK zum Download bereitstellen
         uses: actions/upload-artifact@v4
         with:
-          name: StromBlick-v1.1.1-DIAGNOSE-APK
+          name: StromBlick-v1.2.0-PLUS-APK
           path: android/build/outputs/apk/debug/android-debug.apk
           if-no-files-found: error
           retention-days: 30
