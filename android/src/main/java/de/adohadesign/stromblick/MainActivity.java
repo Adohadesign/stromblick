@@ -1,6 +1,7 @@
 package de.adohadesign.stromblick;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.Intent;
@@ -12,6 +13,7 @@ import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
+import android.webkit.WebResourceError;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -19,6 +21,8 @@ import android.widget.Toast;
 import androidx.webkit.WebViewAssetLoader;
 import androidx.core.content.FileProvider;
 import java.io.OutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 
@@ -26,6 +30,7 @@ public final class MainActivity extends Activity {
     private static final int REQUEST_FILE = 601;
     private static final int REQUEST_BACKUP = 602;
     private static final String APP_URL = "https://appassets.androidplatform.net/assets/www/index.html";
+    private static final String BUILD = "1.1.1";
     private WebView webView;
     private ValueCallback<Uri[]> pendingFileChoice;
     private Uri pendingCameraImage;
@@ -74,12 +79,35 @@ public final class MainActivity extends Activity {
         settings.setAllowUniversalAccessFromFileURLs(false);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         webView.addJavascriptInterface(new BackupBridge(), "StromBlickNative");
+        final WebViewAssetLoader.AssetsPathHandler bundledAssets = new WebViewAssetLoader.AssetsPathHandler(this);
         final WebViewAssetLoader loader = new WebViewAssetLoader.Builder()
-                .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this))
+                .addPathHandler("/assets/", path -> {
+                    // Android muss ES-Module als JavaScript und nicht als Text ausliefern.
+                    if ("www/app.mjs".equals(path) || "www/storage.mjs".equals(path) || "www/calculations.mjs".equals(path)) {
+                        try {
+                            return new WebResourceResponse("text/javascript", "UTF-8", getAssets().open(path));
+                        } catch (IOException e) {
+                            return null;
+                        }
+                    }
+                    return bundledAssets.handle(path);
+                })
                 .build();
         webView.setWebViewClient(new WebViewClient() {
             @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 return loader.shouldInterceptRequest(request.getUrl());
+            }
+            @Override public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                if (request.isForMainFrame()) {
+                    final String report = "Android-WebView Fehler " + error.getErrorCode() + "\n"
+                            + error.getDescription() + "\n\nAdresse: " + request.getUrl()
+                            + "\n\nBitte Screenshot anfertigen.";
+                    runOnUiThread(() -> new AlertDialog.Builder(MainActivity.this)
+                            .setTitle("StromBlick " + BUILD + " – Startdiagnose")
+                            .setMessage(report)
+                            .setPositiveButton("OK", null)
+                            .show());
+                }
             }
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri url = request.getUrl();
@@ -121,8 +149,17 @@ public final class MainActivity extends Activity {
                 return true;
             }
         });
-        if (state == null) webView.loadUrl(APP_URL);
-        else webView.restoreState(state);
+        // Nie einen zuvor gespeicherten Fehlerbildschirm erneut laden.
+        // IndexedDB und die Verbrauchsdaten bleiben dabei unangetastet.
+        try (InputStream ignored = getAssets().open("www/index.html")) {
+            webView.loadUrl(APP_URL);
+        } catch (IOException ex) {
+            new AlertDialog.Builder(this)
+                    .setTitle("StromBlick " + BUILD + " – Dateifehler")
+                    .setMessage("Die Startdatei fehlt in der APK: assets/www/index.html. Bitte Screenshot anfertigen.")
+                    .setPositiveButton("OK", null)
+                    .show();
+        }
     }
 
     private Uri createCameraImage() {
