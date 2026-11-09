@@ -30,7 +30,7 @@ public final class MainActivity extends Activity {
     private static final int REQUEST_FILE = 601;
     private static final int REQUEST_BACKUP = 602;
     private static final String APP_URL = "https://appassets.androidplatform.net/assets/www/index.html";
-    private static final String BUILD = "1.1.1";
+    private static final String BUILD = "1.2.0";
     private WebView webView;
     private ValueCallback<Uri[]> pendingFileChoice;
     private Uri pendingCameraImage;
