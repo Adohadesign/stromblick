@@ -1,8 +1,8 @@
 import {loadState,saveState} from './storage.mjs';
-import {activeTariff,calculate,dateMs,daysBetween,estimateReadingFromOCR,formatEuro,formatNumber,niceDate,numberDE,todayLocal,validState} from './calculations.mjs';
+import {activeTariff,calculate,dateMs,daysBetween,formatEuro,formatNumber,niceDate,numberDE,todayLocal,validState} from './calculations.mjs';
 const $=id=>document.getElementById(id);
 const ID=()=>globalThis.crypto?.randomUUID?.()??('sb-'+Date.now()+'-'+Math.random().toString(36).slice(2));
-let state=null,photoUrl=null,photoBlob=null,selection=null,toastTimer=null,working=false;
+let state=null,toastTimer=null;
 const defaults={schemaVersion:1,settings:{baselineKwh:10396,periodStart:'2026-05-19',periodEnd:'2027-05-19',invoiceDate:'2027-06-18',lastYearKwh:2819},tariffs:[{id:'initial',from:'2026-05-20',priceCt:30.3569,baseYear:180}],readings:[],payments:[]};
 for(let m=0;m<11;m++){
  const d=new Date(Date.UTC(2026,7+m,1)).toISOString().slice(0,10);
@@ -56,45 +56,9 @@ function render(){if(!state)return;
  $('periodWarning').hidden=!c.needsNewPeriod;chart(c.monthly);renderReadings(c);renderPayments();
 }
 async function commit(next,message){validState(next);await saveState(next);state=next;present();if(message)tell(message);}
-function openReading(){const form=$('readingForm');form.reset();displayError('readingError','');$('photoArea').hidden=true;$('ocrStatus').textContent='';$('readingDate').value=todayLocal();clearPhoto();showDialog('readingDialog');}
-function clearPhoto(){if(photoUrl)URL.revokeObjectURL(photoUrl);photoUrl=null;photoBlob=null;selection=null;$('cropRect').style.display='none';}
-function initCamera(){
- $('cameraButton').addEventListener('click',()=>{$('cameraFile').value='';$('cameraFile').click();});
- $('manualButton').addEventListener('click',openReading);
- $('cameraFile').addEventListener('change',event=>{
-   const f=event.target.files?.[0];if(!f)return;
-   if(!f.type.startsWith('image/')){tell('Bitte ein Foto auswählen.');return;}
-   if(f.size>15*1024*1024){tell('Bitte ein kleineres Foto auswählen (maximal 15 MB).');return;}
-   openReading();photoBlob=f;photoUrl=URL.createObjectURL(f);$('photoPreview').src=photoUrl;$('photoArea').hidden=false;
-   $('ocrStatus').textContent='Foto geladen. Die Erkennung startet automatisch …';
-   recognize();
- });
- $('readingDialog').addEventListener('close',clearPhoto);
- $('resetCrop').addEventListener('click',()=>{selection=null;$('cropRect').style.display='none';});
- const container=$('photoContainer');let sx=0,sy=0,dragging=false;
- function relative(e){const r=container.getBoundingClientRect();return {x:Math.max(0,Math.min(r.width,e.clientX-r.left)),y:Math.max(0,Math.min(r.height,e.clientY-r.top))};}
- container.addEventListener('pointerdown',e=>{if(!photoBlob)return;dragging=true;const p=relative(e);sx=p.x;sy=p.y;selection={x:sx,y:sy,w:0,h:0};container.setPointerCapture(e.pointerId);});
- container.addEventListener('pointermove',e=>{if(!dragging)return;const p=relative(e);const x=Math.min(sx,p.x),y=Math.min(sy,p.y);selection={x,y,w:Math.abs(p.x-sx),h:Math.abs(p.y-sy)};const rect=$('cropRect');rect.style.display='block';rect.style.left=x+'px';rect.style.top=y+'px';rect.style.width=selection.w+'px';rect.style.height=selection.h+'px';});
- container.addEventListener('pointerup',()=>{dragging=false;if(selection&&(selection.w<20||selection.h<15)){selection=null;$('cropRect').style.display='none';}});
-}
-async function selectedImage(){if(!photoBlob)throw Error('Kein Foto ausgewählt.');if(!selection)return photoBlob;
- const img=$('photoPreview');await img.decode();const iw=img.naturalWidth,ih=img.naturalHeight;if(!iw||!ih)return photoBlob;
- const rect=img.getBoundingClientRect(),wrap=$('photoContainer').getBoundingClientRect();const scale=Math.min(rect.width/iw,rect.height/ih);const w=iw*scale,h=ih*scale;const xOffset=(rect.width-w)/2+rect.left-wrap.left,yOffset=(rect.height-h)/2+rect.top-wrap.top;
- const sx=Math.max(0,(selection.x-xOffset)/scale),sy=Math.max(0,(selection.y-yOffset)/scale),ex=Math.min(iw,(selection.x+selection.w-xOffset)/scale),ey=Math.min(ih,(selection.y+selection.h-yOffset)/scale);
- if(ex-sx<5||ey-sy<5)throw Error('Der markierte Bereich enthält keine Bilddaten.');
- const cvs=document.createElement('canvas');cvs.width=Math.min(2500,Math.round(ex-sx));cvs.height=Math.min(1500,Math.round(ey-sy));const ctx=cvs.getContext('2d');if(!ctx)throw Error('Bildverarbeitung nicht verfügbar.');ctx.drawImage(img,sx,sy,ex-sx,ey-sy,0,0,cvs.width,cvs.height);return cvs.toDataURL('image/png');
-}
-async function loadOCR(){if(window.Tesseract)return window.Tesseract;
- await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';script.crossOrigin='anonymous';script.onload=resolve;script.onerror=()=>reject(Error('Fotoerkennung konnte nicht geladen werden. Prüfe die Internetverbindung.'));document.head.appendChild(script);});
- if(!window.Tesseract)throw Error('Fotoerkennung nicht verfügbar.');return window.Tesseract;
-}
-async function recognize(){if(working)return;working=true;const btn=$('recognizeButton');btn.disabled=true;const status=$('ocrStatus');status.textContent='Erkennung wird vorbereitet …';
- let worker=null;try{const input=await selectedImage();const ocr=await loadOCR();worker=await ocr.createWorker('eng',1,{logger:m=>{if(m.status==='recognizing text')status.textContent=`Erkenne Zahlen … ${Math.round((m.progress??0)*100)} %`;}});await worker.setParameters({tessedit_char_whitelist:'0123456789., ',tessedit_pageseg_mode:'6'});const out=await worker.recognize(input);const ref=calculate(state).latest.kwh;const guess=estimateReadingFromOCR(out.data.text,ref);
- if(guess===null){status.textContent='Keine eindeutigen Zahlen erkannt. Bitte Zählerstand von Hand eintragen.';}else{if(!$('readingInput').value.trim())$('readingInput').value=String(guess).replace('.',',');status.textContent='Vorschlag erkannt. Bitte am Zählerfoto prüfen und erst dann speichern.';}
- }catch(err){status.textContent=err.message+' Du kannst den Stand manuell eingeben.';}finally{try{await worker?.terminate();}catch{}working=false;btn.disabled=false;}
-}
+function openReading(){const form=$('readingForm');form.reset();displayError('readingError','');$('readingDateLabel').textContent=niceDate(todayLocal());showDialog('readingDialog');}
 async function saveReading(ev){ev.preventDefault();displayError('readingError','');try{
- const kwh=numberDE($('readingInput').value),date=$('readingDate').value;if(!Number.isFinite(kwh)||kwh<0)throw Error('Bitte einen gültigen Zählerstand eingeben.');dateMs(date);
+ const kwh=numberDE($('readingInput').value),date=todayLocal();if(!Number.isFinite(kwh)||kwh<0)throw Error('Bitte einen gültigen Zählerstand eingeben.');dateMs(date);
  if(date>todayLocal())throw Error('Du kannst keine Messung in der Zukunft speichern.');
  if(date<state.settings.periodStart||date>state.settings.periodEnd)throw Error('Messdatum liegt außerhalb des Abrechnungszeitraums. Bitte Einstellungen prüfen.');
  const entries=[{date:state.settings.periodStart,kwh:state.settings.baselineKwh},...state.readings].sort((a,b)=>a.date.localeCompare(b.date)||a.kwh-b.kwh);
@@ -145,7 +109,7 @@ function wire(){
  $('paymentsList').addEventListener('click',event=>{const id=event.target.closest('[data-payment-id]')?.dataset.paymentId;if(id)togglePayment(id);});
  $('exportButton').addEventListener('click',downloadBackup);$('importButton').addEventListener('click',()=>{$('importFile').click();});
  $('importFile').addEventListener('change',event=>importBackup(event.target.files?.[0]));
- $('recognizeButton').addEventListener('click',recognize);initCamera();
+ $('manualButton').addEventListener('click',openReading);
 }
 async function start(){wire();try{state=await loadState();if(state)validState(state);present();}catch(e){$('welcome').hidden=false;fillSetup();$('setupForm').querySelector('button[type=submit]').disabled=true;tell('Lokaler Speicher nicht verfügbar: '+e.message);}
  if('serviceWorker' in navigator&&['https:','http:'].includes(location.protocol)){navigator.serviceWorker.register('./service-worker.js').catch(()=>{});}
