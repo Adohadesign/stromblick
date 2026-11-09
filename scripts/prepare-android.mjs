@@ -1,0 +1,22 @@
+// Erstellt Android-Assets aus der unveränderten v1.0.0-Webbasis.
+import {readFile,writeFile,mkdir,copyFile,rm} from 'node:fs/promises';
+import {join} from 'node:path';
+const out='android/src/main/assets/www';
+await rm(out,{recursive:true,force:true});
+await mkdir(out+'/icons',{recursive:true});
+for(const name of ['index.html','app.mjs','calculations.mjs','storage.mjs','styles.css','manifest.webmanifest','service-worker.js']) await copyFile(name,join(out,name));
+for(const name of ['icon.svg','icon-192.png','icon-512.png']) await copyFile(join('icons',name),join(out,'icons',name));
+let app=await readFile(join(out,'app.mjs'),'utf8');
+const oldSW="if('serviceWorker' in navigator&&['https:','http:'].includes(location.protocol))";
+if(!app.includes(oldSW)) throw new Error('Service-Worker-Stelle fehlt: Build abgebrochen');
+app=app.replace(oldSW,"if(location.hostname!=='appassets.androidplatform.net'&&'serviceWorker' in navigator&&['https:','http:'].includes(location.protocol))");
+const oldBackup="function downloadBackup(){const payload={...clone(state),exportedAt:new Date().toISOString()};const blob=";
+const newBackup="function downloadBackup(){const payload={...clone(state),exportedAt:new Date().toISOString()};if(location.hostname==='appassets.androidplatform.net'&&window.StromBlickNative){window.StromBlickNative.saveBackup(JSON.stringify(payload,null,2),'StromBlick_Backup_'+todayLocal()+'.json');return;}const blob=";
+if(!app.includes(oldBackup)) throw new Error('Backup-Stelle fehlt: Build abgebrochen');
+app=app.replace(oldBackup,newBackup);
+await writeFile(join(out,'app.mjs'),app);
+let html=await readFile(join(out,'index.html'),'utf8');
+if(!html.includes('StromBlick v1.0.0')) throw new Error('Versionsmarkierung fehlt: Build abgebrochen');
+html=html.replace('StromBlick v1.0.0 · Auf deinem Gerät · Keine Cloud','StromBlick v1.1.0 · Android-App · Keine Cloud');
+await writeFile(join(out,'index.html'),html);
+console.log('Android-Web-Assets v1.1.0 vorbereitet');
