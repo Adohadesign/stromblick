@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0c1220">
-  <meta name="description" content="StromBlick – persönlicher, lokaler Stromverbrauchsmonitor mit Fotoerkennung.">
+  <meta name="description" content="StromBlick – persönlicher Strommonitor mit manueller Zählerstand-Erfassung und automatischem Datum.">
   <meta name="robots" content="noindex, nofollow">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
@@ -25,7 +25,7 @@
         <div class="hero__number"><span id="currentReading">–</span><span class="unit">kWh</span></div>
         <div class="hero__footer"><span id="readingInfo">Noch keine Messung</span><span class="tiny-icon" aria-hidden="true">◈</span></div>
       </section>
-      <div class="actions"><button id="cameraButton" class="button primary"><span aria-hidden="true">▣</span> Zähler fotografieren</button><button id="manualButton" class="button subtle">Manuell</button></div>
+      <div class="actions"><button id="manualButton" class="button primary add-reading-button" type="button" aria-label="Neuen Zählerstand erfassen"><span class="add-reading-icon" aria-hidden="true">+</span><span>Zählerstand eintragen</span></button></div>
       <section class="section" aria-label="Verbrauch und Kosten"><div class="section-header"><h2>Dein Überblick</h2><span id="periodLabel" class="small-muted"></span></div>
         <div class="stats"><article class="stat"><span>Verbrauch seit Start</span><strong id="consumptionStat">–</strong><small id="consumptionSub">Gemessene kWh</small></article><article class="stat"><span>Kosten bisher</span><strong id="costStat">–</strong><small>Inklusive anteiligem Grundpreis</small></article><article class="stat"><span>Tagesdurchschnitt</span><strong id="dailyStat">–</strong><small>Aus den Messungen</small></article><article class="stat"><span>Letzter Messabstand</span><strong id="intervalStat">–</strong><small id="intervalSub">Seit der letzten Messung</small></article></div>
       </section>
@@ -37,7 +37,7 @@
       <section class="section"><div class="section-header"><h2>Abschläge</h2><button id="addPayment" class="text-button">+ Eintragen</button></div><p class="section-hint">Markiere nur tatsächlich geleistete Zahlungen als „Bezahlt“.</p><div id="paymentsList" class="stack"></div></section>
       <div id="periodWarning" class="notice" hidden>Das eingestellte Abrechnungsjahr ist abgelaufen. Erstelle in den Einstellungen einen neuen Zeitraum, bevor du weitere Messungen dem nächsten Jahr zuordnest. Die alten Messungen bleiben erhalten.</div>
     </main>
-    <footer class="footer">StromBlick v1.0.0 · Auf deinem Gerät · Keine Cloud</footer>
+    <footer class="footer">StromBlick v1.2.0 · Nur auf deinem Handy · Keine Cloud</footer>
   </div>
 
   <div id="welcome" class="setup-screen" hidden>
@@ -55,7 +55,7 @@
     </div>
   </div>
 
-  <dialog id="readingDialog" class="sheet"><form id="readingForm" class="sheet-inner"><div class="sheet-head"><h2>Neuen Zählerstand speichern</h2><button type="button" class="close-button" data-close="readingDialog" aria-label="Schließen">×</button></div><p class="small-muted">Bitte den angezeigten Zählerstand vor dem Speichern überprüfen.</p><div id="photoArea" hidden><div class="photo-container" id="photoContainer"><img id="photoPreview" alt="Foto deines Stromzählers"><div id="cropRect"></div></div><p class="section-hint">Optional: Ziehe mit dem Finger einen Rahmen nur um die Zählerzahlen.</p><div class="row-actions"><button class="button subtle" id="recognizeButton" type="button">Zahlen erkennen</button><button class="button ghost" id="resetCrop" type="button">Rahmen entfernen</button></div><div id="ocrStatus" class="small-muted" role="status" aria-live="polite"></div></div><label>Zählerstand (kWh)<input id="readingInput" type="text" inputmode="decimal" placeholder="z. B. 11750" required></label><label>Datum der Ablesung<input id="readingDate" type="date" required></label><div id="readingError" class="error" role="alert"></div><button type="submit" class="button primary full">Zählerstand bestätigen und speichern</button></form></dialog>
+  <dialog id="readingDialog" class="sheet"><form id="readingForm" class="sheet-inner"><div class="sheet-head"><h2>Neuen Zählerstand speichern</h2><button type="button" class="close-button" data-close="readingDialog" aria-label="Schließen">×</button></div><p class="small-muted">Trage die Zahl ein, die dein Stromzähler in kWh anzeigt. Es wird nichts automatisch aus Fotos gelesen.</p><label>Zählerstand (kWh)<input id="readingInput" type="text" inputmode="decimal" autocomplete="off" placeholder="z. B. 11763" required></label><div class="automatic-date"><span>Automatisch erfasst am</span><strong id="readingDateLabel">–</strong></div><input id="readingDate" type="hidden"><p class="section-hint">Das Datum übernimmt StromBlick beim Speichern von deinem Handy. Du musst es nicht eingeben.</p><div id="readingError" class="error" role="alert"></div><button type="submit" class="button primary full">Zählerstand speichern</button></form></dialog>
 
   <dialog id="settingsDialog" class="sheet"><div class="sheet-inner"><div class="sheet-head"><h2>Einstellungen & Sicherheit</h2><button type="button" class="close-button" data-close="settingsDialog" aria-label="Schließen">×</button></div>
     <form id="settingsForm" class="form-grid"><h3>Abrechnungszeitraum</h3><label>Startzählerstand (kWh)<input name="baselineKwh" type="text" inputmode="decimal" required></label><label>Datum des Startzählerstands<input name="periodStart" type="date" required></label><label>Ende des Abrechnungsjahres<input name="periodEnd" type="date" required></label><label>Voraussichtliches Rechnungsdatum<input name="invoiceDate" type="date" required></label><h3>Tarif ab Datum</h3><p class="section-hint">Ein neuer Preis wird ab dem ausgewählten Tag verwendet. Frühere Preisabschnitte bleiben erhalten.</p><label>Neuer Preis gilt ab<input name="tariffDate" type="date" required></label><label>Arbeitspreis brutto (Cent/kWh) inkl. Stromsteuer<input name="priceCt" type="text" inputmode="decimal" required></label><label>Grundpreis brutto (Euro/Jahr)<input name="baseYear" type="text" inputmode="decimal" required></label><label>Vergleich: Verbrauch letztes Jahr (kWh)<input name="lastYearKwh" type="text" inputmode="decimal"></label><button type="submit" class="button primary full">Einstellungen speichern</button><div id="settingsError" class="error" role="alert"></div></form>
@@ -63,7 +63,6 @@
   </div></dialog>
 
   <dialog id="paymentDialog" class="sheet"><form id="paymentForm" class="sheet-inner"><div class="sheet-head"><h2>Abschlag eintragen</h2><button type="button" class="close-button" data-close="paymentDialog" aria-label="Schließen">×</button></div><label>Fälligkeitsdatum<input name="date" type="date" required></label><label>Betrag (€)<input name="amount" type="text" inputmode="decimal" required></label><label class="checkbox-label"><input name="paid" type="checkbox"> Betrag tatsächlich gezahlt</label><button class="button primary full" type="submit">Abschlag speichern</button></form></dialog>
-  <input type="file" id="cameraFile" accept="image/*" capture="environment" hidden>
   <input type="file" id="importFile" accept="application/json,.json" hidden>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script type="module" src="./app.mjs"></script>
