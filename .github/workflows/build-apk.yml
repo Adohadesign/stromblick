@@ -38,8 +38,10 @@ jobs:
       - name: Android SDK 35 bereitstellen
         run: |
           echo "Verwende Android SDK: ${ANDROID_HOME}"
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+          SDKMANAGER="${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager"
+          test -x "$SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+          "$SDKMANAGER" 'platforms;android-35' 'build-tools;35.0.0'
       - name: Rechenlogik testen
         run: node --test tests/calculations.test.mjs
       - name: APK bauen
