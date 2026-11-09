@@ -25,7 +25,7 @@ import java.nio.charset.StandardCharsets;
 public final class MainActivity extends Activity {
     private static final int REQUEST_FILE = 601;
     private static final int REQUEST_BACKUP = 602;
-    private static final String APP_URL = "https://appassets.androidplatform.net/assets/index.html";
+    private static final String APP_URL = "https://appassets.androidplatform.net/assets/www/index.html";
     private WebView webView;
     private ValueCallback<Uri[]> pendingFileChoice;
     private Uri pendingCameraImage;
