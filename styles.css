@@ -8,3 +8,30 @@
 .add-reading-icon{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:#073f3b;color:#d6fff5;font-size:2rem;font-weight:500;line-height:1}
 .automatic-date{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:14px 15px;background:#172b3e;border:1px solid #476174;border-radius:12px;font-size:.82rem;color:#c4d7e6}
 .automatic-date strong{color:#f2fbff;font-size:1rem;white-space:nowrap}
+
+/* v1.3.0: reduced one-screen summary, old details are preserved and expandable. */
+body{background:#0d1625}
+.app-shell{max-width:560px}
+.topbar{padding:17px 0 15px}
+.hero{padding:16px 20px;background:#19323d;border-color:#365d66;box-shadow:none}
+.hero:before{display:none}
+.hero .eyebrow{margin:19px 0 5px;letter-spacing:.06em}
+.hero__number{font-size:clamp(2.65rem,11vw,3.7rem)}
+.hero__footer{margin-top:15px}
+.actions{margin:12px 0 24px}
+.quick-overview{margin-bottom:21px}
+.quick-overview h2{font-size:1.05rem;margin:0 0 11px}
+.quick-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.quick-tile{min-width:0;min-height:112px;border:1px solid #314557;border-radius:16px;background:#172637;padding:15px 12px;display:flex;flex-direction:column;gap:8px}
+.quick-tile span{font-size:.78rem;color:#c3d3e0}
+.quick-tile strong{font-size:clamp(1.16rem,4.3vw,1.45rem);font-weight:750;letter-spacing:-.025em;overflow-wrap:anywhere}
+.quick-tile small{font-size:.67rem;line-height:1.3;color:#9fafc2}
+.details-panel{background:#152439;border:1px solid #30465a;border-radius:16px;overflow:hidden;margin-bottom:20px}
+.details-panel summary{padding:17px 16px;list-style:none;cursor:pointer;font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.details-panel summary::-webkit-details-marker{display:none}
+.details-panel[open] summary{border-bottom:1px solid #30465a}
+.details-panel summary span{font-size:1.3rem;color:#a9bfd1;transition:transform .2s}
+.details-panel[open] summary span{transform:rotate(180deg)}
+.details-content{padding:16px 12px 5px}
+.details-content .section{margin-bottom:24px}
+@media(max-width:350px){.quick-grid{gap:7px}.quick-tile{padding:11px 10px}}

@@ -21,11 +21,21 @@
     <main>
       <section class="hero" aria-label="Zählerstand">
         <div class="hero__top"><span class="tag"><span class="status-dot"></span> Lokal gespeichert</span><span id="measurementDate" class="hero__date">–</span></div>
-        <p class="eyebrow">Dein letzter bestätigter Zählerstand</p>
+        <p class="eyebrow">Letzter Zählerstand</p>
         <div class="hero__number"><span id="currentReading">–</span><span class="unit">kWh</span></div>
         <div class="hero__footer"><span id="readingInfo">Noch keine Messung</span><span class="tiny-icon" aria-hidden="true">◈</span></div>
       </section>
       <div class="actions"><button id="manualButton" class="button primary add-reading-button" type="button" aria-label="Neuen Zählerstand erfassen"><span class="add-reading-icon" aria-hidden="true">+</span><span>Zählerstand eintragen</span></button></div>
+      <section class="quick-overview" aria-label="Strom auf einen Blick">
+        <h2>Auf einen Blick</h2>
+        <div class="quick-grid">
+          <article class="quick-tile"><span>Verbrauch</span><strong id="quickConsumption">–</strong><small>Seit letzter Rechnung</small></article>
+          <article class="quick-tile"><span>Stromkosten</span><strong id="quickCost">–</strong><small>Bis zur letzten Messung</small></article>
+          <article class="quick-tile"><span>Monatlicher Abschlag</span><strong id="quickInstallment">150,00 €</strong><small>Für geplante Zahlungen</small></article>
+          <article class="quick-tile"><span id="quickBalanceLabel">Guthaben / Nachzahlung</span><strong id="quickBalance">–</strong><small>Schätzung fürs Jahr</small></article>
+        </div>
+      </section>
+      <details class="details-panel" id="moreDetails"><summary>Weitere Informationen <span aria-hidden="true">⌄</span></summary><div class="details-content">
       <section class="section" aria-label="Verbrauch und Kosten"><div class="section-header"><h2>Dein Überblick</h2><span id="periodLabel" class="small-muted"></span></div>
         <div class="stats"><article class="stat"><span>Verbrauch seit Start</span><strong id="consumptionStat">–</strong><small id="consumptionSub">Gemessene kWh</small></article><article class="stat"><span>Kosten bisher</span><strong id="costStat">–</strong><small>Inklusive anteiligem Grundpreis</small></article><article class="stat"><span>Tagesdurchschnitt</span><strong id="dailyStat">–</strong><small>Aus den Messungen</small></article><article class="stat"><span>Letzter Messabstand</span><strong id="intervalStat">–</strong><small id="intervalSub">Seit der letzten Messung</small></article></div>
       </section>
@@ -35,9 +45,10 @@
       <section class="section"><div class="section-header"><h2>Verbrauch im Verlauf</h2><span class="small-muted">Auf Monate verteilt*</span></div><article class="chart-panel"><div id="monthChart" class="chart" aria-label="Monatlicher Stromverbrauch als Balkendiagramm"></div><p class="disclaimer">*Verbrauch zwischen zwei Messungen wird gleichmäßig verteilt. Monatswerte sind bei Messlücken Schätzungen.</p></article></section>
       <section class="section"><div class="section-header"><h2>Messungen</h2><span id="countReading" class="small-muted"></span></div><div id="readingList" class="stack"></div></section>
       <section class="section"><div class="section-header"><h2>Abschläge</h2><button id="addPayment" class="text-button">+ Eintragen</button></div><p class="section-hint">Markiere nur tatsächlich geleistete Zahlungen als „Bezahlt“.</p><div id="paymentsList" class="stack"></div></section>
+      </div></details>
       <div id="periodWarning" class="notice" hidden>Das eingestellte Abrechnungsjahr ist abgelaufen. Erstelle in den Einstellungen einen neuen Zeitraum, bevor du weitere Messungen dem nächsten Jahr zuordnest. Die alten Messungen bleiben erhalten.</div>
     </main>
-    <footer class="footer">StromBlick v1.2.0 · Nur auf deinem Handy · Keine Cloud</footer>
+    <footer class="footer">StromBlick v1.3.0 · Nur auf deinem Handy · Keine Cloud</footer>
   </div>
 
   <div id="welcome" class="setup-screen" hidden>

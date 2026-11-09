@@ -107,3 +107,21 @@ export function estimateReadingFromOCR(raw, reference=0) {
   if(bigger.length) return bigger.sort((a,b)=>a-b)[0];
   return candidates.sort((a,b)=>Math.abs(a-reference)-Math.abs(b-reference))[0];
 }
+
+/** v1.3.0: Convert only the 11 original open 94-Euro template payments to 150 Euro.
+ * Keep paid payments, user-created items and measurement/tariff data unchanged.
+ * Returns a fresh object only when conversion is necessary. Repeating is safe. */
+export function migrateOpenTemplateAdvances(state) {
+  if (!state || !Array.isArray(state.payments)) throw new Error('Abschlagsdaten fehlen.');
+  let count = 0;
+  const payments = state.payments.map(payment => {
+    const isTemplate = /^abschlag-2026-(?:08|09|10|11|12)-01$/.test(payment.id)
+      || /^abschlag-2027-(?:01|02|03|04|05|06)-01$/.test(payment.id);
+    if (isTemplate && payment.paid === false && payment.amount === 94) {
+      count++;
+      return {...payment, amount: 150};
+    }
+    return payment;
+  });
+  return {state: count > 0 ? {...state, payments} : state, count};
+}

@@ -16,6 +16,6 @@ if(!app.includes(oldBackup)) throw new Error('Backup-Stelle fehlt: Build abgebro
 app=app.replace(oldBackup,newBackup);
 await writeFile(join(out,'app.mjs'),app);
 let html=await readFile(join(out,'index.html'),'utf8');
-if(!html.includes('StromBlick v1.2.0 · Nur auf deinem Handy · Keine Cloud')) throw new Error('Versionsmarkierung 1.2.0 fehlt: Build abgebrochen');
+if(!html.includes('StromBlick v1.3.0 · Nur auf deinem Handy · Keine Cloud')) throw new Error('Versionsmarkierung 1.3.0 fehlt: Build abgebrochen');
 await writeFile(join(out,'index.html'),html);
-console.log('Android-Web-Assets v1.2.0 vorbereitet');
+console.log('Android-Web-Assets v1.3.0 vorbereitet');

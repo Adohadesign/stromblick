@@ -25,6 +25,6 @@ test('Bestehende Speicher- und Kostenfunktionen bleiben angebunden',()=>{
   assert.match(app,/\$\('exportButton'\)\.addEventListener\('click',downloadBackup\)/);
 });
 test('Android-Build enthält die aktuelle Versionsmarkierung',()=>{
-  assert.match(html,/StromBlick v1\.2\.0/);
-  assert.match(build,/StromBlick v1\.2\.0/);
+  assert.match(html,/StromBlick v1\.3\.0/);
+  assert.match(build,/StromBlick v1\.3\.0/);
 });

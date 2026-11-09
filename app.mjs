@@ -1,12 +1,12 @@
 import {loadState,saveState} from './storage.mjs';
-import {activeTariff,calculate,dateMs,daysBetween,formatEuro,formatNumber,niceDate,numberDE,todayLocal,validState} from './calculations.mjs';
+import {activeTariff,calculate,dateMs,daysBetween,migrateOpenTemplateAdvances,formatEuro,formatNumber,niceDate,numberDE,todayLocal,validState} from './calculations.mjs';
 const $=id=>document.getElementById(id);
 const ID=()=>globalThis.crypto?.randomUUID?.()??('sb-'+Date.now()+'-'+Math.random().toString(36).slice(2));
 let state=null,toastTimer=null;
 const defaults={schemaVersion:1,settings:{baselineKwh:10396,periodStart:'2026-05-19',periodEnd:'2027-05-19',invoiceDate:'2027-06-18',lastYearKwh:2819},tariffs:[{id:'initial',from:'2026-05-20',priceCt:30.3569,baseYear:180}],readings:[],payments:[]};
 for(let m=0;m<11;m++){
  const d=new Date(Date.UTC(2026,7+m,1)).toISOString().slice(0,10);
- defaults.payments.push({id:'abschlag-'+d,date:d,amount:94,paid:false});
+ defaults.payments.push({id:'abschlag-'+d,date:d,amount:150,paid:false});
 }
 function clone(obj){return structuredClone(obj);}
 function tell(message){const t=$('toast');t.textContent=message;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3800);}
@@ -52,6 +52,13 @@ function render(){if(!state)return;
  setText('paidStat',formatEuro(c.paid));setText('balanceStat',c.forecastBalance==null?'Noch offen':formatEuro(Math.abs(c.forecastBalance)));
  $('balanceStat').classList.toggle('positive',c.forecastBalance>0);$('balanceStat').classList.toggle('warning',c.forecastBalance<0);
  setText('forecastBadge',c.forecastBalance==null?'Messung nötig':c.forecastBalance>=0?'Guthaben (geschätzt)':'Nachzahlung (geschätzt)');
+ setText('quickConsumption',c.entries.length===1?'Noch offen':formatNumber(c.measuredKwh,0)+' kWh');
+ setText('quickCost',c.entries.length===1?'Noch offen':formatEuro(c.measuredCost));
+ setText('quickInstallment',formatEuro(150));
+ setText('quickBalance',c.forecastBalance==null?'Noch offen':formatEuro(Math.abs(c.forecastBalance)));
+ setText('quickBalanceLabel',c.forecastBalance==null?'Guthaben / Nachzahlung':c.forecastBalance>=0?'Guthaben (geschätzt)':'Nachzahlung (geschätzt)');
+ $('quickBalance').classList.toggle('positive',c.forecastBalance>0);
+ $('quickBalance').classList.toggle('warning',c.forecastBalance<0);
  const last=state.settings.lastYearKwh;const comparison=c.forecastKwh!=null&&Number.isFinite(last)&&last>0?Math.round(100*(c.forecastKwh/last-1)):null;setText('priorYearNote',comparison==null?'Vergleich mit dem Vorjahr nach der ersten Messung verfügbar.':`Vorjahr: ${formatNumber(last)} kWh · Prognose ${comparison>=0?'+':''}${comparison} % gegenüber dem Vorjahr`);$('priorYearNote').classList.toggle('warning',comparison!=null&&comparison>10);
  $('periodWarning').hidden=!c.needsNewPeriod;chart(c.monthly);renderReadings(c);renderPayments();
 }
@@ -105,13 +112,13 @@ function wire(){
  $('settingsButton').addEventListener('click',showPeriodSettings);
  document.querySelectorAll('[data-close]').forEach(btn=>btn.addEventListener('click',()=>closeDialog(btn.dataset.close)));
  $('readingForm').addEventListener('submit',saveReading);$('settingsForm').addEventListener('submit',saveSettings);$('paymentForm').addEventListener('submit',addPayment);
- $('addPayment').addEventListener('click',()=>{$('paymentForm').reset();$('paymentForm').elements.date.value=todayLocal();$('paymentForm').elements.amount.value='94,00';showDialog('paymentDialog');});
+ $('addPayment').addEventListener('click',()=>{$('paymentForm').reset();$('paymentForm').elements.date.value=todayLocal();$('paymentForm').elements.amount.value='150,00';showDialog('paymentDialog');});
  $('paymentsList').addEventListener('click',event=>{const id=event.target.closest('[data-payment-id]')?.dataset.paymentId;if(id)togglePayment(id);});
  $('exportButton').addEventListener('click',downloadBackup);$('importButton').addEventListener('click',()=>{$('importFile').click();});
  $('importFile').addEventListener('change',event=>importBackup(event.target.files?.[0]));
  $('manualButton').addEventListener('click',openReading);
 }
-async function start(){wire();try{state=await loadState();if(state)validState(state);present();}catch(e){$('welcome').hidden=false;fillSetup();$('setupForm').querySelector('button[type=submit]').disabled=true;tell('Lokaler Speicher nicht verfügbar: '+e.message);}
+async function start(){wire();try{state=await loadState();let migrated=0;if(state){validState(state);const upgrade=migrateOpenTemplateAdvances(state);if(upgrade.count){validState(upgrade.state);await saveState(upgrade.state);state=upgrade.state;migrated=upgrade.count;}}present();if(migrated)tell(`${migrated} offene Abschläge wurden von 94 € auf 150 € geändert. Bereits bezahlte bleiben erhalten.`);}catch(e){$('welcome').hidden=false;fillSetup();$('setupForm').querySelector('button[type=submit]').disabled=true;tell('Lokaler Speicher nicht verfügbar: '+e.message);}
  if('serviceWorker' in navigator&&['https:','http:'].includes(location.protocol)){navigator.serviceWorker.register('./service-worker.js').catch(()=>{});}
 }
 start();

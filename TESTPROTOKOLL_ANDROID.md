@@ -1,17 +1,21 @@
-# Testprotokoll StromBlick Android v1.1.0
+# TESTPROTOKOLL_ANDROID.md – StromBlick v1.3.0
 
-## Bereits geprüft
-- 16 automatische Berechnungsprüfungen der vorhandenen Version bestanden (lokale Node-Testausführung).
-- Syntax des Build-Vorbereitungsskripts und dessen Ausführung mit der v1.0.0-Basis erfolgreich.
-- XML-Struktur und Android-Dateipfade manuell geprüft.
-- Keine vorhandenen produktiven Web-App-Dateien durch Android-Ergänzung überschrieben.
+## Tatsächlich ausgeführt
+- Node.js: `node --check` für app.mjs, calculations.mjs und scripts/prepare-android.mjs: ohne Syntaxfehler.
+- `node --test tests/*.test.mjs`: 11 Testgruppen erfolgreich, einschließlich 16 Prüfaussagen der bisherigen Berechnungs-Testdatei.
+- Migration: 94 € nur bei unbezahlten ursprünglichen Abschlagsvorlagen auf 150 €; bezahlt und individuelle Einträge unverändert; Idempotenz geprüft.
+- Standardwert 150 € für neue geplante Abschläge und für das Zahlungsformular geprüft.
+- Vereinfachte Startansicht: erforderliche IDs, Plus und aufklappbare bestehende Detailansichten im HTML geprüft.
+- `node scripts/prepare-android.mjs`: Android-Assets mit 10 Dateien generiert; Android-Backup-Anbindung bleibt eingebaut.
 
-## Noch offen
-- GitHub-Actions-Build und generierte APK auf Erfolg prüfen.
-- Installations- und Starttest am Android-Gerät.
-- Kamera/Fotowahl/OCR testen.
-- Lokale Speicherung über Neustart testen.
-- Backup exportieren und importieren.
-- Wiederholte APK-Installation/Signaturverhalten prüfen.
+## NICHT getestet
+- APK-Build auf GitHub / Java-Android-Kompilierung dieser Version (kein Android-SDK hier).
+- Start, Datumsanzeige, Datenspeicherung und Backup auf einem echten Android-Gerät.
+- Android-Installations-Update über alte Debug-APK mit ggf. abweichender Signatur.
+- Echte End-to-End Regression aller App-Bedienungen auf dem Mobiltelefon.
 
-Bis dahin **Testversion**, keine bestätigte stabile Android-Version.
+## Prüfung und Schutz
+- Grundlage index.html, app.mjs und styles.css aus dem letzten bestätigten GitHub-Stand v1.2.0 per Git-Blob-SHA validiert.
+- Alle vorhandenen Messungen und Tarifdaten bleiben unverändert.
+- Keine Datenmigration mit Tabellen-/Datenbankänderung; lediglich offene ursprünglich angelegte Abschlagsbeträge werden gezielt aktualisiert.
+- Keine GitHub-Änderungen vorgenommen, da Schreibzugriff nicht freigegeben wurde.

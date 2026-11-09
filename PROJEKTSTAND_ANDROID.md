@@ -1,23 +1,21 @@
-# Projektstand StromBlick v1.2.0 – manuelle Erfassung
+# Projektstand – StromBlick v1.3.0
 
-## Grundlage
-- Weiterentwicklung des zuletzt in GitHub vorliegenden Android-Standes v1.1.1 (mit v1.0.0-Datenmodell).
-- GitHub-Repository: Adohadesign/stromblick.
-- Android-Paket: de.adohadesign.stromblick.
+## Basis
+- Weiterentwicklung des zuletzt aus GitHub geprüften Stands v1.2.0. Inhalt von index.html, app.mjs und styles.css vor Änderungen mit GitHub-Blob-SHAs verifiziert.
+- Keine Datenbankänderung und kein Löschen bestehender Messungen.
 
-## Änderungen v1.2.0
-- Großes Plus zur Eingabe eines Zählerstands in kWh.
-- Tagesdatum beim Öffnen sichtbar; beim Speichern wird das aktuelle lokale Datum des Handys verwendet.
-- Fotoerkennung und Kamera-Bedienelemente entfernt.
-- Kein Zählerstand wird automatisch aus einem Foto übernommen.
-- Bestehende Verbrauchs-, Kosten-, Prognose-, Abschlags- und Backup-Funktionen bleiben vorhanden.
-- Es gibt keine automatische Datenlöschung und keine Datenbankmigration.
+## Änderungen
+- Vereinfachte Startseite: Zähler, große Plus-Eingabe, vier Hauptwerte; Details bleiben aufklappbar.
+- Neue Abschlagsvorlagen und Vorschlagswert beim Hinzufügen: **150 €** statt 94 €.
+- Beim ersten Start: ausschliesslich offene 94-€-Abschläge mit den ursprünglichen Vorlagen-IDs von August 2026 bis Juni 2027 auf 150 € anpassen.
+- Bereits als bezahlt markierte Abschläge und individuelle Zusatzzahlungen bleiben unverändert.
+- Messungen, Berechnungen, Tarife, Backup und Datenbanknamen bleiben erhalten.
 
 ## Prüfung
-- GitHub Actions führt Berechnungs- und Erfassungs-Regressionstests aus.
-- APK-Build läuft über GitHub Actions.
-- Handyinstallation, Datum bei Mitternachtswechsel, Bedienung und Wiederherstellung vor Ort müssen praktisch verifiziert werden.
-- Debug-APKs aus verschiedenen GitHub-Runs können unterschiedlich signiert sein. Vor einer eventuellen Deinstallation zuerst ein Backup exportieren.
+- Node-Tests für Berechnungen, manuelle Erfassung, Migration und Dashboard.
+- Android-Asset-Vorbereitung und HTML-Validierung vor Auslieferung.
+- Android-APK-Build und Handytest stehen noch aus.
+- Debug-APKs aus verschiedenen GitHub-Läufen können unterschiedlich signiert sein. Vor eventueller Deinstallation zuerst Backup exportieren.
 
-## Datenrisiko
-Fehlablesungen, die bereits bestätigt und gespeichert wurden, werden **nicht automatisch geändert oder gelöscht**. Ein direktes Überschreiben historischer Einträge ist nicht vorgesehen.
+## Status
+GitHub wurde aufgrund fehlender Freigabe für Schreibzugriffe **nicht geändert**. Dieses Paket enthält vollständige ersetzbare Dateien.
